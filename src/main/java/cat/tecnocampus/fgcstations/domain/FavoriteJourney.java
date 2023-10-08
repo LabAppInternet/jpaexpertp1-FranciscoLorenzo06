@@ -1,11 +1,23 @@
 package cat.tecnocampus.fgcstations.domain;
 
-import java.util.List;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+@Entity(name = "FavoriteJourney")
+@Table(name = "favourite_journey")
 public class FavoriteJourney {
 
+    @Id
+    @GeneratedValue
     private String id;
-    private List<DayTimeStart> startList;
+
+    @ManyToMany(mappedBy = "favourite_journeys")
+    private List<DayTimeStart> startList = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Journey journey;
 
 
@@ -36,6 +48,18 @@ public class FavoriteJourney {
         this.journey = journey;
     }
 
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+
+
+
     @Override
     public String toString() {
         return "FavoriteJourney{" +
@@ -61,5 +85,9 @@ public class FavoriteJourney {
         int result = startList != null ? startList.hashCode() : 0;
         result = 31 * result + (journey != null ? journey.hashCode() : 0);
         return result;
+    }
+
+    public void addUser(User user) {
+        this.user = user;
     }
 }

@@ -1,10 +1,30 @@
 package cat.tecnocampus.fgcstations.domain;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity(name="DayTimeStart")
+@Table(name="day_time_start")
 public class DayTimeStart {
 
+    @Id
+    @GeneratedValue
     private String id;
     private String timeStart;
     private String dayOfWeek;
+
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+
+    @JoinTable(name= "favjourney_daytimestart",
+              joinColumns = @JoinColumn(name = "day_time_start_id"),
+            inverseJoinColumns = @JoinColumn(name = "favourite_journey_id")
+    )
+    private List<FavoriteJourney> favoriteJourney = new ArrayList<>();
 
     public DayTimeStart() {}
 

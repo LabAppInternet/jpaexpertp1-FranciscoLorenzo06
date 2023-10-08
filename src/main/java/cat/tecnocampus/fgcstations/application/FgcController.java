@@ -16,90 +16,91 @@ import java.util.stream.Collectors;
 
 @Service
 public class FgcController {
-    private StationDAO stationDAO;
-    private UserDAO userDAO;
-    private FavoriteJourneyDAO favoriteJourneyDAO;
-    private JourneyDAO journeyDAO;
-    private FriendDAO friendDAO;
+    private final StationRepository stationRepo;
+    private final UserRepository userRepo;
+    private final FavoriteJourneyRepository favoriteJourneyRepo;
+    private final JourneyRepository journeyRepo;
+    private final FriendRepository friendRepo;
 
-    public FgcController(StationDAO stationDAO, UserDAO userDAO,
-                         FavoriteJourneyDAO favoriteJourneyDAO, JourneyDAO journeyDAO,
-                         FriendDAO friendDAO) {
-        this.stationDAO = stationDAO;
-        this.userDAO = userDAO;
-        this.favoriteJourneyDAO = favoriteJourneyDAO;
-        this.journeyDAO = journeyDAO;
-        this.friendDAO = friendDAO;
+    public FgcController(StationRepository stationRepo, UserRepository userRepo,
+                         FavoriteJourneyRepository favoriteJourneyRepo, JourneyRepository journeyRepo,
+                         FriendRepository friendRepo) {
+        this.stationRepo = stationRepo;
+        this.userRepo = userRepo;
+        this.favoriteJourneyRepo =favoriteJourneyRepo;
+        this.journeyRepo = journeyRepo;
+        this.friendRepo = friendRepo;
     }
 
     public List<Station> getStations() {
-        return stationDAO.findAll();
-    }
+        return stationRepo.findAll();
+    } 
 
     public Station getStation(String nom) {
-        return stationDAO.findByName(nom);
-    }
+        return stationRepo.findByNom(nom);
+    } 
 
     public User getUser(String username) {
         //get the user
-        User user = userDAO.findByUsername(username);
+        User user = userRepo.findByUsername(username);
 
         //get the user's favorite journey
-        user.setFavoriteJourneyList(favoriteJourneyDAO.findFavoriteJourneys(username));
+        user.setFavoriteJourneyList(favoriteJourneyRepo.findFavoriteJourneys(username));
 
         return user;
     }
 
-    public List<User> getUsers() {
+    public List<User> getUsers() { 
         //get the users
-        List<User> users = userDAO.getUsers();
+        List<User> users = userRepo.getUsers();
 
         //get the users' favorite journeys
-        users.forEach(u -> u.setFavoriteJourneyList(favoriteJourneyDAO.findFavoriteJourneys(u.getUsername())));
+        users.forEach(u -> u.setFavoriteJourneyList(favoriteJourneyRepo.findFavoriteJourneys(u.getUsername())));
 
         return users;
     }
 
     public boolean existsUser(String username) {
-        return userDAO.existsUser(username);
-    }
+        return userRepo.existsUserByUsername(username);
+    } 
 
     public void addUserFavoriteJourney(String username, FavoriteJourneyDTO favoriteJourneyDTO) {
         FavoriteJourney favoriteJourney = convertFavoriteJourneyDTO(favoriteJourneyDTO);
         saveFavoriteJourney(favoriteJourney, username);
     }
 
-    private void saveFavoriteJourney(FavoriteJourney favoriteJourney, String username) {
+    private void saveFavoriteJourney(FavoriteJourney favoriteJourney, String username) { 
         String journeyId = saveJourneyIfDoesNotExist(favoriteJourney.getJourney());
         favoriteJourney.getJourney().setId(journeyId);
-        favoriteJourneyDAO.saveFavoriteJourney(favoriteJourney,username);
+        favoriteJourney.addUser(userRepo.findByUsername(username));
+        favoriteJourneyRepo.save(favoriteJourney);
     }
 
-    private String saveJourneyIfDoesNotExist(Journey journey) {
-        String journeyId = journeyDAO.getJourneyId(journey);
+    private String saveJourneyIfDoesNotExist(Journey journey) { 
+        String journeyId = String.valueOf(journeyRepo.findById(journey.getId()));
         if (journeyId.equals("-1")) {
             journeyId = UUID.randomUUID().toString();
             journey.setId(journeyId);
-            journeyDAO.saveJourney(journey);
+            journeyRepo.save(journey);
         }
         return journeyId;
     }
 
-    public List<FavoriteJourney> getFavoriteJourneys(String username) {
+    public List<FavoriteJourney> getFavoriteJourneys(String username) { 
         if (!existsUser(username)) {
             UserDoesNotExistsException e = new UserDoesNotExistsException("user " + username + " doesn't exist");
             e.setUsername(username);
             throw e;
         }
-        return favoriteJourneyDAO.findFavoriteJourneys(username);
+        return favoriteJourneyRepo.findFavoriteJourneys(username);
     }
 
-    private FavoriteJourney convertFavoriteJourneyDTO(FavoriteJourneyDTO favoriteJourneyDTO) {
+    private FavoriteJourney convertFavoriteJourneyDTO(FavoriteJourneyDTO favoriteJourneyDTO) { 
         FavoriteJourney favoriteJourney = new FavoriteJourney();
         favoriteJourney.setId(UUID.randomUUID().toString());
-        Journey journey = new Journey(stationDAO.findByName(favoriteJourneyDTO.getOrigin()),
-                                      stationDAO.findByName(favoriteJourneyDTO.getDestination()),
-                                      "empty id");
+        Journey journey = new Journey(stationRepo.findByNom(favoriteJourneyDTO.getOrigin()),
+                stationRepo.findByNom(favoriteJourneyDTO.getDestination()),
+                "empty id");
         favoriteJourney.setJourney(journey);
 
         List<DayTimeStart> dayTimeStarts = favoriteJourneyDTO.getDayTimes().stream().map(this::convertDayTimeStartDTO).collect(Collectors.toList());
@@ -108,17 +109,17 @@ public class FgcController {
         return favoriteJourney;
     }
 
-    private DayTimeStart convertDayTimeStartDTO(DayTimeStartDTO dayTimeStartDTO) {
+    private DayTimeStart convertDayTimeStartDTO(DayTimeStartDTO dayTimeStartDTO) { 
         return new DayTimeStart(dayTimeStartDTO.getDayOfWeek(), dayTimeStartDTO.getTime(), UUID.randomUUID().toString());
     }
 
     public Friends getUserFriends(String username) {
-        return friendDAO.getFriends(username);
-    }
+        return friendRepo.getFriends(username);
+    } 
 
     public List<Friends> getAllUserFriends() {
-        return friendDAO.getFriends();
-    }
+        return friendRepo.getFriends();
+    } 
 
     public void saveFriends(FriendsDTO friendsDTO) {
         if (!existsUser(friendsDTO.getUsername())) {
@@ -128,7 +129,7 @@ public class FgcController {
         }
 
         Friends friends = convertFriendsDTO(friendsDTO);
-        friendDAO.saveFriends(friends);
+        friendRepo.save(friends);
     }
 
     private Friends convertFriendsDTO(FriendsDTO friendsDTO) {

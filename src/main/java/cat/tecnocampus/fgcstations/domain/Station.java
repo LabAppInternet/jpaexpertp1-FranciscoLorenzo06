@@ -1,8 +1,31 @@
 package cat.tecnocampus.fgcstations.domain;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity(name ="Station")
+@Table(name = "station")
 public class Station {
 
+    @Id
     private String nom;
+
+    @OneToMany(
+            mappedBy = "journey",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Journey> journeyOriginStation = new ArrayList<>();
+
+
+    @OneToMany(
+            mappedBy = "journey",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Journey> journeyDestinationStation = new ArrayList<>();
 
     private String longitud;
     private String latitud;

@@ -1,10 +1,15 @@
 package cat.tecnocampus.fgcstations.domain;
 
+import jakarta.persistence.*;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity(name = "Userlab")
+@Table(name ="userlab")
 public class User implements Serializable {
+    @Id
     private String username;
 
     private String name;
@@ -12,6 +17,11 @@ public class User implements Serializable {
 
     private String email;
 
+    @OneToMany(
+            mappedBy = "userlab",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     public List<FavoriteJourney> favoriteJourneyList;
 
     public User() {

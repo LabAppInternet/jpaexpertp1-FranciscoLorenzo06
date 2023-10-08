@@ -1,8 +1,9 @@
 package cat.tecnocampus.fgcstations.application.persistence;
 
 import cat.tecnocampus.fgcstations.domain.Journey;
-public interface JourneyDAO {
-    int saveJourney(Journey journey);
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface JourneyRepository extends JpaRepository<Journey, String > {
 
     String getJourneyId(Journey journey);
 

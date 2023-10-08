@@ -2,12 +2,29 @@ package cat.tecnocampus.fgcstations.domain;
 
 
 import cat.tecnocampus.fgcstations.domain.exceptions.SameOriginDestinationException;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity(name = "Journey")
+@Table(name = "journey")
 public class Journey {
-
+    @Id
+    @GeneratedValue
     private String id;
 
+    @OneToMany(
+            mappedBy = "journey",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<FavoriteJourney> favoriteJourneyList = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Station origin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Station destination;
 
     public Journey(Station origin, Station destination, String id) {
@@ -18,6 +35,10 @@ public class Journey {
         this.origin = origin;
         this.destination = destination;
         this.id = id;
+    }
+
+    public Journey() {
+
     }
 
     public String getId() {

@@ -1,10 +1,20 @@
 package cat.tecnocampus.fgcstations.domain;
 
-import java.util.List;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+@Entity(name = "Friends")
+@Table(name = "friends")
 public class Friends {
+    @Id
     private String username;
-    private List<String> friends;
+
+    private List<String> friends = new ArrayList<>();
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    private User user;
 
     public String getUsername() {
         return username;
